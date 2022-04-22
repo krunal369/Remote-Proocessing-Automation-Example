@@ -28,6 +28,7 @@ Orders robots from RobotSpareBin Industries Inc.
     Click Order your robot tab
     Fill the form using the data from the csv file
     Create ZIP package from PDF files
+    [Teardown]    Close Browser
 
 *** Keywords ***
 Get and log the value of the vault secrets using the Get Secret keyword
@@ -71,8 +72,7 @@ Fill the form using the data from the csv file
         Input Text    //input[@type='number']    ${row}[Legs]
         Input Text    address    ${row}[Address]
         Click Button    //*[@id='preview']
-        Click Button    //*[@id='order']
-        ${pdf}=    Store the receipt as a PDF file    ${row}[Order number]
+        ${pdf}=    Wait Until Keyword Succeeds    10x    0.5s    Store the receipt as a PDF file    ${row}[Order number]
         ${screenshot}=    Take a screenshot of the robot    ${row}[Order number]
         Click Button    //*[@id='order-another']
         Embed the robot screenshot to the receipt PDF file    ${screenshot}    ${pdf}    ${row}[Order number]
@@ -89,15 +89,15 @@ Embed the robot screenshot to the receipt PDF file
 
 Store the receipt as a PDF file
     [Arguments]    ${row}
-    Wait Until Element Is Visible    id:receipt
+    Click Button    //*[@id='order']
     ${receipt_results_html}=    Get Element Attribute    id:receipt    outerHTML
     Html To Pdf    ${receipt_results_html}    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.pdf
     [Return]    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.pdf
 
 Take a screenshot of the robot
     [Arguments]    ${row}
-    Wait Until Element Is Visible    id:robot-preview-image
-    Screenshot    id:robot-preview-image    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.png
+    Wait Until Element Is Visible    //div[@id='robot-preview-image']
+    Screenshot    //div[@id='robot-preview-image']    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.png
     [Return]    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.png
 
 Embed the robot screenshot to the receipt PDF file ${screenshot} ${pdf}
