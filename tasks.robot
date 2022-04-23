@@ -6,20 +6,19 @@ Documentation     Orders robots from RobotSpareBin Industries Inc.
 ...               Saves the screenshot of the ordered robot.
 ...               Embeds the screenshot of the robot to the PDF receipt.
 ...               Creates ZIP archive of the receipts and the images.
-Library           RPA.Robocorp.Vault
-Library           RPA.Browser.Selenium    auto_close=${FALSE}
-Library           RPA.Dialogs
+Library           RPA.Browser.Selenium
 Library           RPA.HTTP
-Library           RPA.PDF
 Library           RPA.Tables
+Library           RPA.PDF
 Library           RPA.Archive
-Library           OperatingSystem
 Library           RPA.Dialogs
+Library           RPA.Robocorp.Vault
+Library           OperatingSystem
 
 *** Tasks ***
 Orders robots from RobotSpareBin Industries Inc.
-    Download the order excel file
     Open the intranet website
+    Download the order excel file
     Fill the form using the data from the csv file
     Create ZIP package from PDF files
     [Teardown]    Close Browser
@@ -45,8 +44,6 @@ Fill the form using the data from the csv file
     ...    header=True
     FOR    ${row}    IN    @{tables}
         Close the annoying modal
-        Log    ${row}[Head]
-        Log    ${row}[Order number]
         Select From List By Value    head    ${row}[Head]
         Select Radio Button    body    ${row}[Body]
         Input Text    //input[@type='number']    ${row}[Legs]
@@ -62,6 +59,7 @@ Embed the robot screenshot to the receipt PDF file
     [Arguments]    ${screenshot}    ${pdf}    ${row}
     Open Pdf    ${pdf}
     Add Watermark Image To Pdf    ${screenshot}    ${OUTPUT_DIR}${/}${row}.pdf
+    Remove File    ${OUTPUT_DIR}${/}${row}.png
 
 Store the receipt as a PDF file
     [Arguments]    ${row}
@@ -79,4 +77,4 @@ Take a screenshot of the robot
 Create ZIP package from PDF files
     ${zip_file_name}=    Set Variable    ${OUTPUT_DIR}${/}/PDFs.zip
     Archive Folder With Zip    ${OUTPUT_DIR}    ${zip_file_name}    include=*.pdf
-    Log    ${zip_file_name}
+    Remove Files    ${OUTPUT_DIR}/*.pdf
