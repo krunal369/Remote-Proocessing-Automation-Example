@@ -7,8 +7,8 @@ Documentation     Orders robots from RobotSpareBin Industries Inc.
 ...               Embeds the screenshot of the robot to the PDF receipt.
 ...               Creates ZIP archive of the receipts and the images.
 Library           RPA.Robocorp.Vault
-#Library          RPA.Robocloud.Secrets
 Library           RPA.Browser.Selenium    auto_close=${FALSE}
+Library           RPA.Dialogs
 Library           RPA.HTTP
 Library           RPA.PDF
 Library           RPA.Tables
@@ -16,15 +16,12 @@ Library           RPA.Archive
 Library           OperatingSystem
 Library           RPA.Dialogs
 
-*** Variables ***
-${PDF_TEMP_OUTPUT_DIRECTORY}=    ${CURDIR}${/}temp
-
 *** Tasks ***
 Orders robots from RobotSpareBin Industries Inc.
     ${fileUrl}=    Get and log the value of the vault secrets using the Get Secret keyword
     Download the order excel file    ${fileUrl}
-    Create Directory    ${PDF_TEMP_OUTPUT_DIRECTORY}
-    Open the intranet website
+    ${url}=    Provide Interanet website
+    Open the intranet website    ${url}
     Click Order your robot tab
     Fill the form using the data from the csv file
     Create ZIP package from PDF files
@@ -33,8 +30,6 @@ Orders robots from RobotSpareBin Industries Inc.
 *** Keywords ***
 Get and log the value of the vault secrets using the Get Secret keyword
     ${secret}=    Get Secret    OrderFileName
-    # Note: In real robots, you should not print secrets to the log.
-    # This is just for demonstration purposes. :)
     [Return]    ${secret}[orderfilename]
 
 Take orders file URL
@@ -48,8 +43,14 @@ Download the order excel file
     [Arguments]    ${fileUrl}
     Download    ${fileUrl}    overwrite=True
 
+Provide Interanet website
+    Add text Input    url    label=Enter interanet Url
+    ${result}=    Run Dialog
+    [Return]    ${result.url}
+
 Open the intranet website
-    Open Available Browser    https://robotsparebinindustries.com/    maximized=true
+    [Arguments]    ${url}
+    Open Available Browser    ${url}    maximized=true
 
 Click Order your robot tab
     Click Link    Order your robot!
@@ -80,30 +81,23 @@ Fill the form using the data from the csv file
 
 Embed the robot screenshot to the receipt PDF file
     [Arguments]    ${screenshot}    ${pdf}    ${row}
-    Log    ${screenshot}
-    Log    ${pdf}
-    Log    ${row}
     Open Pdf    ${pdf}
-    Add Watermark Image To Pdf    ${screenshot}    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.pdf
-    Remove File    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.png
+    Add Watermark Image To Pdf    ${screenshot}    ${OUTPUT_DIR}${/}${row}.pdf
 
 Store the receipt as a PDF file
     [Arguments]    ${row}
     Click Button    //*[@id='order']
     ${receipt_results_html}=    Get Element Attribute    id:receipt    outerHTML
-    Html To Pdf    ${receipt_results_html}    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.pdf
-    [Return]    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.pdf
+    Html To Pdf    ${receipt_results_html}    ${OUTPUT_DIR}${/}${row}.pdf
+    [Return]    ${OUTPUT_DIR}${/}${row}.pdf
 
 Take a screenshot of the robot
     [Arguments]    ${row}
     Wait Until Element Is Visible    //div[@id='robot-preview-image']
-    Screenshot    //div[@id='robot-preview-image']    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.png
-    [Return]    ${PDF_TEMP_OUTPUT_DIRECTORY}${/}${row}.png
-
-Embed the robot screenshot to the receipt PDF file ${screenshot} ${pdf}
-    Open Pdf ${pdf}
+    Screenshot    //div[@id='robot-preview-image']    ${OUTPUT_DIR}${/}${row}.png
+    [Return]    ${OUTPUT_DIR}${/}${row}.png
 
 Create ZIP package from PDF files
-    ${zip_file_name}=    Set Variable    ${CURDIR}${/}/PDFs.zip
-    Archive Folder With Zip    ${PDF_TEMP_OUTPUT_DIRECTORY}    ${zip_file_name}
+    ${zip_file_name}=    Set Variable    ${OUTPUT_DIR}${/}/PDFs.zip
+    Archive Folder With Zip    ${OUTPUT_DIR}    ${zip_file_name}    include=*.pdf
     Log    ${zip_file_name}
