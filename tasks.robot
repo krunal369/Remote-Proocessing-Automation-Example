@@ -18,42 +18,21 @@ Library           RPA.Dialogs
 
 *** Tasks ***
 Orders robots from RobotSpareBin Industries Inc.
-    ${fileUrl}=    Get and log the value of the vault secrets using the Get Secret keyword
-    Download the order excel file    ${fileUrl}
-    ${url}=    Provide Interanet website
-    Open the intranet website    ${url}
-    Click Order your robot tab
+    Download the order excel file
+    Open the intranet website
     Fill the form using the data from the csv file
     Create ZIP package from PDF files
     [Teardown]    Close Browser
 
 *** Keywords ***
-Get and log the value of the vault secrets using the Get Secret keyword
-    ${secret}=    Get Secret    OrderFileName
-    [Return]    ${secret}[orderfilename]
-
-Take orders file URL
-    Add text input    orderfilename    label="Enter orders.csv file path"
-    ${result}=    Run Dialog
-    [Return]    ${result.orderfilename}
-
-result
-
 Download the order excel file
-    [Arguments]    ${fileUrl}
-    Download    ${fileUrl}    overwrite=True
-
-Provide Interanet website
-    Add text Input    url    label=Enter interanet Url
+    Add text Input    filepath    label=Enter csv file path
     ${result}=    Run Dialog
-    [Return]    ${result.url}
+    Download    ${result.filepath}    overwrite=True
 
 Open the intranet website
-    [Arguments]    ${url}
-    Open Available Browser    ${url}    maximized=true
-
-Click Order your robot tab
-    Click Link    Order your robot!
+    ${secret}=    Get Secret    RobocorpIntranet
+    Open Available Browser    ${secret}[RobocorpIntranetUrl]    maximized=true
 
 Close the annoying modal
     Wait Until Element Is Visible    //button[text()='OK']
